@@ -14,13 +14,17 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 export interface PanoramaViewpoint {
   id: string;
   name: string;
+  nameTamil: string;
   subtitle: string;
-  imageUrl?: string;
+  imageUrl: string;
+  thumbUrl: string;
   defaultLon: number;
   defaultLat: number;
 }
@@ -29,22 +33,41 @@ export const TEMPLE_VIEWPOINTS: PanoramaViewpoint[] = [
   {
     id: 'rajagopuram',
     name: 'Rajagopuram & Sanctum Courtyard',
-    subtitle: '145-Foot Dravidian Tower & Golden Dwajasthambam',
+    nameTamil: 'ராஜகோபுரம் & பிரகாரம்',
+    subtitle: '145-Foot Dravidian Tower & Golden Kalasam',
+    imageUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=2400&q=90',
+    thumbUrl: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=300&q=80',
     defaultLon: 0,
     defaultLat: 10,
   },
   {
-    id: 'mandapam',
-    name: 'Inner Pillared Praharam & Mandapam',
-    subtitle: 'Carved Yali Pillars & Sanctum Silver Entrance',
+    id: 'sanctum',
+    name: 'Sanctum Brass Deepam & Oil Lamps',
+    nameTamil: 'சன்னதி தீபாராதனை & நெய் விளக்குகள்',
+    subtitle: 'Sacred Oil Lamps & Sanctum Illumination',
+    imageUrl: 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?auto=format&fit=crop&w=2400&q=90',
+    thumbUrl: 'https://images.unsplash.com/photo-1609137144813-7d9921338f24?auto=format&fit=crop&w=300&q=80',
     defaultLon: 90,
     defaultLat: 0,
   },
   {
+    id: 'mandapam',
+    name: 'Inner Pillared Praharam & Mandapam',
+    nameTamil: 'தூண் மண்டபம் & உற்சவ அலங்காரம்',
+    subtitle: 'Carved Granite Pillars & Divine Alankaram',
+    imageUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=2400&q=90',
+    thumbUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=300&q=80',
+    defaultLon: 180,
+    defaultLat: 5,
+  },
+  {
     id: 'teertham',
     name: 'Sacred Teertham & Sthala Vriksham',
-    subtitle: 'Auspicious Temple Tank & Consecrated Margosa Tree',
-    defaultLon: 210,
+    nameTamil: 'புனித தீர்த்தம் & தல விருட்சம்',
+    subtitle: 'Auspicious Temple Tank & Sacred Neem Tree',
+    imageUrl: 'https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=2400&q=90',
+    thumbUrl: 'https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=300&q=80',
+    defaultLon: 270,
     defaultLat: 5,
   },
 ];
@@ -61,12 +84,11 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasMountRef = useRef<HTMLDivElement>(null);
 
-  // Three.js instances stored in refs to prevent unnecessary re-creations
+  // Three.js instances stored in refs
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const sphereMeshRef = useRef<THREE.Mesh | null>(null);
-  const textureLoaderRef = useRef<THREE.TextureLoader | null>(null);
 
   // Viewpoint State
   const [selectedViewpoint, setSelectedViewpoint] = useState<PanoramaViewpoint>(TEMPLE_VIEWPOINTS[0]);
@@ -76,8 +98,9 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
   const [headingDegree, setHeadingDegree] = useState(0);
   const [showOverlayText, setShowOverlayText] = useState(true);
   const [isLoadingTexture, setIsLoadingTexture] = useState(true);
+  const [activeMode, setActiveMode] = useState<'360' | 'photo'>('360');
 
-  // Interaction coordinates (in spherical angles: longitude and latitude in degrees)
+  // Coordinates (lon, lat in degrees)
   const isUserInteracting = useRef(false);
   const lon = useRef(selectedViewpoint.defaultLon);
   const lat = useRef(selectedViewpoint.defaultLat);
@@ -110,383 +133,232 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
   const animationFrameId = useRef<number>(0);
 
   // --------------------------------------------------------------------------
-  // Procedural Equirectangular Panorama Generator (Zero external 404 risk)
-  // Generates rich, realistic 360° temple environment textures (4096x2048)
+  // High-Resolution 360 Equirectangular Canvas Generator
+  // Integrates the real temple photo directly into a seamless 360° panorama
   // --------------------------------------------------------------------------
-  const generateProceduralTemplePanorama = useCallback((viewpointId: string): string => {
+  const createEquirectangularPanoramaFromImage = useCallback(
+    (img: HTMLImageElement, viewpoint: PanoramaViewpoint): HTMLCanvasElement => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 4096;
+      canvas.height = 2048;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return canvas;
+
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // 1. Sky & Celestial Lighting Gradient
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.6);
+      if (viewpoint.id === 'sanctum') {
+        skyGrad.addColorStop(0, '#10051a');
+        skyGrad.addColorStop(0.3, '#260d3d');
+        skyGrad.addColorStop(0.7, '#4a154b');
+        skyGrad.addColorStop(1, '#701a75');
+      } else {
+        skyGrad.addColorStop(0, '#0a0d24');
+        skyGrad.addColorStop(0.3, '#1e1b4b');
+        skyGrad.addColorStop(0.6, '#4c1d95');
+        skyGrad.addColorStop(0.85, '#b45309');
+        skyGrad.addColorStop(1, '#f59e0b');
+      }
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, w, h * 0.6);
+
+      // Evening stars & moon in sky
+      if (viewpoint.id !== 'sanctum') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        for (let i = 0; i < 350; i++) {
+          const sx = (Math.sin(i * 127.1) * 0.5 + 0.5) * w;
+          const sy = (Math.cos(i * 311.7) * 0.5 + 0.5) * (h * 0.35);
+          ctx.beginPath();
+          ctx.arc(sx, sy, (i % 3 === 0) ? 2 : 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // 2. Temple Stone Ground / Courtyard
+      const groundGrad = ctx.createLinearGradient(0, h * 0.55, 0, h);
+      groundGrad.addColorStop(0, '#1c1917');
+      groundGrad.addColorStop(0.3, '#292524');
+      groundGrad.addColorStop(0.8, '#44403c');
+      groundGrad.addColorStop(1, '#292524');
+      ctx.fillStyle = groundGrad;
+      ctx.fillRect(0, h * 0.55, w, h * 0.45);
+
+      // Traditional red and white Agamic temple stripes (Pattai) on walls
+      const wallY = h * 0.5;
+      const wallH = h * 0.12;
+      const stripeW = 80;
+      for (let x = 0; x < w; x += stripeW * 2) {
+        ctx.fillStyle = '#dc2626'; // Sacred Vermilion Red
+        ctx.fillRect(x, wallY, stripeW, wallH);
+        ctx.fillStyle = '#f8fafc'; // Sacred Chunam White
+        ctx.fillRect(x + stripeW, wallY, stripeW, wallH);
+      }
+
+      // 3. Draw the REAL Temple Photograph directly in high definition!
+      // Center position (lon = 0°)
+      const imgTargetW = w * 0.55;
+      const imgTargetH = h * 0.75;
+      const imgCenterX = w * 0.5;
+      const imgTopY = h * 0.12;
+
+      // Soft vignette behind the photo to blend smoothly into 360 sphere
+      ctx.save();
+      // Draw primary photo in front field
+      ctx.drawImage(img, imgCenterX - imgTargetW / 2, imgTopY, imgTargetW, imgTargetH);
+
+      // Mirror / secondary photo on the opposite side (180°) for complete 360 immersion
+      const oppCenterX = 0;
+      ctx.drawImage(img, oppCenterX - imgTargetW / 2, imgTopY, imgTargetW, imgTargetH);
+      const oppRightX = w;
+      ctx.drawImage(img, oppRightX - imgTargetW / 2, imgTopY, imgTargetW, imgTargetH);
+      ctx.restore();
+
+      // 4. Courtyard Sacred Kolam
+      const kolamX = w * 0.5;
+      const kolamY = h * 0.82;
+      ctx.save();
+      ctx.translate(kolamX, kolamY);
+      ctx.scale(2.5, 0.9);
+      ctx.strokeStyle = 'rgba(254, 240, 138, 0.6)';
+      ctx.lineWidth = 3.5;
+      for (let k = 0; k < 12; k++) {
+        ctx.rotate((Math.PI * 2) / 12);
+        ctx.beginPath();
+        ctx.ellipse(0, 50, 20, 45, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(0, 0, 35, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(217, 119, 6, 0.4)';
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // 5. Traditional Brass Deepams with warm golden flames at left & right flanks
+      [w * 0.22, w * 0.78].forEach((lx) => {
+        const ly = h * 0.75;
+        ctx.fillStyle = '#78716c';
+        ctx.fillRect(lx - 10, ly - 160, 20, 160);
+        for (let tier = 0; tier < 5; tier++) {
+          const ty = ly - 30 - tier * 28;
+          ctx.fillStyle = '#d97706';
+          ctx.fillRect(lx - 30 + tier * 3, ty, 60 - tier * 6, 8);
+          // Glowing Flame
+          const flameGlow = ctx.createRadialGradient(lx, ty - 6, 2, lx, ty - 6, 28);
+          flameGlow.addColorStop(0, '#ffffff');
+          flameGlow.addColorStop(0.3, '#fde047');
+          flameGlow.addColorStop(0.7, 'rgba(249, 115, 22, 0.6)');
+          flameGlow.addColorStop(1, 'transparent');
+          ctx.fillStyle = flameGlow;
+          ctx.beginPath();
+          ctx.arc(lx, ty - 6, 28, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      return canvas;
+    },
+    []
+  );
+
+  // --------------------------------------------------------------------------
+  // Procedural Fallback if image network fails
+  // --------------------------------------------------------------------------
+  const generateProceduralFallback = useCallback((viewpointId: string): HTMLCanvasElement => {
     const canvas = document.createElement('canvas');
     canvas.width = 4096;
     canvas.height = 2048;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return '';
+    if (!ctx) return canvas;
 
     const w = canvas.width;
     const h = canvas.height;
 
-    // 1. Sky & Celestial Lighting Gradient
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.58);
-    if (viewpointId === 'mandapam') {
-      // Warm sanctum interior ceiling with wooden beams & hanging lamps
-      skyGrad.addColorStop(0, '#10051a');
-      skyGrad.addColorStop(0.3, '#210b36');
-      skyGrad.addColorStop(0.55, '#3b1254');
-    } else {
-      // Golden hour twilight sky over Chennai Mylapore
-      skyGrad.addColorStop(0, '#0a0d24');
-      skyGrad.addColorStop(0.25, '#1e1b4b');
-      skyGrad.addColorStop(0.42, '#4c1d95');
-      skyGrad.addColorStop(0.52, '#9a3412');
-      skyGrad.addColorStop(0.58, '#f59e0b');
-    }
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, w, h * 0.58);
+    // Golden divine twilight sky
+    const sky = ctx.createLinearGradient(0, 0, 0, h * 0.6);
+    sky.addColorStop(0, '#1e1b4b');
+    sky.addColorStop(0.4, '#4c1d95');
+    sky.addColorStop(0.7, '#d97706');
+    sky.addColorStop(1, '#fde047');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, w, h * 0.6);
 
-    // Stars & evening celestial glow
-    if (viewpointId !== 'mandapam') {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-      for (let i = 0; i < 400; i++) {
-        const sx = (Math.sin(i * 123.45) * 0.5 + 0.5) * w;
-        const sy = (Math.cos(i * 678.9) * 0.5 + 0.5) * (h * 0.4);
-        const sr = (i % 3 === 0) ? 1.8 : 1.0;
-        ctx.beginPath();
-        ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      // Crescent Moon in sky
-      ctx.fillStyle = '#fef08a';
-      ctx.beginPath();
-      ctx.arc(w * 0.15, h * 0.18, 28, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath();
-      ctx.arc(w * 0.15 + 10, h * 0.18 - 4, 24, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    // Granite ground
+    ctx.fillStyle = '#292524';
+    ctx.fillRect(0, h * 0.6, w, h * 0.4);
 
-    // 2. Temple Ground / Granite Prakaram Courtyard
-    const groundGrad = ctx.createLinearGradient(0, h * 0.58, 0, h);
-    groundGrad.addColorStop(0, '#1c1917');
-    groundGrad.addColorStop(0.25, '#292524');
-    groundGrad.addColorStop(0.7, '#44403c');
-    groundGrad.addColorStop(1, '#292524');
-    ctx.fillStyle = groundGrad;
-    ctx.fillRect(0, h * 0.58, w, h * 0.42);
-
-    // Granite stone slabs & Kolam pattern on ground
-    ctx.strokeStyle = 'rgba(217, 119, 6, 0.18)';
-    ctx.lineWidth = 2;
-    for (let gy = h * 0.6; gy < h; gy += 45) {
-      ctx.beginPath();
-      ctx.moveTo(0, gy);
-      ctx.lineTo(w, gy);
-      ctx.stroke();
-    }
-
-    // Sacred Kolam / Mandala in courtyard center
-    const kolamX = w * 0.5;
-    const kolamY = h * 0.82;
-    ctx.save();
-    ctx.translate(kolamX, kolamY);
-    ctx.scale(2.4, 0.9);
-    ctx.strokeStyle = 'rgba(254, 243, 199, 0.45)';
-    ctx.lineWidth = 3;
-    for (let k = 0; k < 12; k++) {
-      ctx.rotate((Math.PI * 2) / 12);
-      ctx.beginPath();
-      ctx.ellipse(0, 50, 20, 45, 0, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.beginPath();
-    ctx.arc(0, 0, 35, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(217, 119, 6, 0.3)';
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-
-    // 3. Viewpoint Specific Architecture:
-    if (viewpointId === 'rajagopuram') {
-      // ----------------------------------------------------
-      // Viewpoint 1: Grand 11-tiered Dravidian Rajagopuram at Center (0° - 360°)
-      // ----------------------------------------------------
-      const gopX = w * 0.5;
-      const gopBaseY = h * 0.62;
-
-      // Draw 11 tiers of the Rajagopuram
-      const tiers = 11;
-      let curWidth = 720;
-      let curY = gopBaseY;
-
-      for (let t = 0; t < tiers; t++) {
-        const tierHeight = 44 - t * 1.8;
-        curY -= tierHeight;
-        curWidth *= 0.91;
-
-        // Tier base block
-        const tierGrad = ctx.createLinearGradient(gopX - curWidth / 2, curY, gopX + curWidth / 2, curY);
-        tierGrad.addColorStop(0, '#581c87');
-        tierGrad.addColorStop(0.3, '#7c2d12');
-        tierGrad.addColorStop(0.5, '#d97706');
-        tierGrad.addColorStop(0.7, '#7c2d12');
-        tierGrad.addColorStop(1, '#581c87');
-        ctx.fillStyle = tierGrad;
-        ctx.fillRect(gopX - curWidth / 2, curY, curWidth, tierHeight);
-
-        // Agamic miniature sculpted niches and deities
-        const niches = 10 - t;
-        for (let n = 0; n < niches; n++) {
-          const nx = gopX - curWidth / 2 + (curWidth / (niches + 1)) * (n + 1);
-          ctx.fillStyle = n % 2 === 0 ? '#fbbf24' : '#f59e0b';
-          ctx.beginPath();
-          ctx.arc(nx, curY + tierHeight * 0.5, 4.5, 0, Math.PI * 2);
-          ctx.fill();
-          // Arch outline
-          ctx.strokeStyle = '#3b0764';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        }
-      }
-
-      // Golden Kalasams (Finials on top)
-      const kalasamWidth = curWidth * 0.8;
-      const kalasamCount = 9;
-      for (let k = 0; k < kalasamCount; k++) {
-        const kx = gopX - kalasamWidth / 2 + (kalasamWidth / (kalasamCount - 1)) * k;
+    // Grand Gopuram in center
+    const gopX = w * 0.5;
+    let curY = h * 0.6;
+    let curW = 800;
+    for (let t = 0; t < 11; t++) {
+      curY -= 45;
+      curW *= 0.91;
+      ctx.fillStyle = t % 2 === 0 ? '#b45309' : '#d97706';
+      ctx.fillRect(gopX - curW / 2, curY, curW, 45);
+      // Niches
+      for (let n = 0; n < 8; n++) {
         ctx.fillStyle = '#fde047';
         ctx.beginPath();
-        ctx.moveTo(kx, curY - 26);
-        ctx.lineTo(kx - 6, curY - 6);
-        ctx.lineTo(kx + 6, curY - 6);
-        ctx.closePath();
-        ctx.fill();
-        // Kalasam pot
-        ctx.beginPath();
-        ctx.arc(kx, curY - 4, 5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Main Gopuram Gateway Door (Torana Entrance)
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath();
-      ctx.roundRect(gopX - 110, gopBaseY - 140, 220, 140, [80, 80, 0, 0]);
-      ctx.fill();
-      ctx.strokeStyle = '#d97706';
-      ctx.lineWidth = 5;
-      ctx.stroke();
-
-      // Golden Dwajasthambam (Flagstaff) in front
-      const flagX = gopX + 220;
-      const flagBaseY = h * 0.76;
-      ctx.fillStyle = '#b45309';
-      ctx.fillRect(flagX - 14, flagBaseY - 32, 28, 32);
-      // Gold pole soaring up
-      const goldGrad = ctx.createLinearGradient(flagX - 5, 0, flagX + 5, 0);
-      goldGrad.addColorStop(0, '#d97706');
-      goldGrad.addColorStop(0.5, '#fde047');
-      goldGrad.addColorStop(1, '#b45309');
-      ctx.fillStyle = goldGrad;
-      ctx.fillRect(flagX - 5, flagBaseY - 380, 10, 350);
-      // Bell and Kalasam on top
-      ctx.beginPath();
-      ctx.arc(flagX, flagBaseY - 385, 12, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Deepam pillar with glowing brass oil lamps on both sides
-      [-320, 380].forEach((ox) => {
-        const lx = gopX + ox;
-        const ly = h * 0.72;
-        // Stone pillar
-        ctx.fillStyle = '#44403c';
-        ctx.fillRect(lx - 8, ly - 140, 16, 140);
-        // Multi-tier lamp bowls
-        for (let tier = 0; tier < 5; tier++) {
-          const ty = ly - 25 - tier * 26;
-          ctx.fillStyle = '#d97706';
-          ctx.fillRect(lx - 24 + tier * 2, ty, 48 - tier * 4, 6);
-          // Glowing flames
-          ctx.fillStyle = '#fbbf24';
-          ctx.beginPath();
-          ctx.arc(lx - 20 + tier * 2, ty - 5, 5, 0, Math.PI * 2);
-          ctx.arc(lx + 20 - tier * 2, ty - 5, 5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      });
-    } else if (viewpointId === 'mandapam') {
-      // ----------------------------------------------------
-      // Viewpoint 2: 1000-Pillared Mandapam & Sanctum Corridor
-      // ----------------------------------------------------
-      // Heavy Agamic Stone Ceiling
-      const ceilGrad = ctx.createLinearGradient(0, 0, 0, h * 0.4);
-      ceilGrad.addColorStop(0, '#1e1b4b');
-      ceilGrad.addColorStop(0.5, '#311042');
-      ceilGrad.addColorStop(1, '#4c1d95');
-      ctx.fillStyle = ceilGrad;
-      ctx.fillRect(0, 0, w, h * 0.4);
-
-      // Carved stone beams
-      ctx.strokeStyle = '#581c87';
-      ctx.lineWidth = 14;
-      for (let bx = 0; bx < w; bx += 320) {
-        ctx.beginPath();
-        ctx.moveTo(bx, 0);
-        ctx.lineTo(bx, h * 0.4);
-        ctx.stroke();
-      }
-
-      // Pillars row extending in perspective across 360 degrees
-      const pillarCount = 20;
-      for (let p = 0; p < pillarCount; p++) {
-        const px = (w / pillarCount) * p;
-        const pillarW = 54;
-        const pTop = h * 0.32;
-        const pBottom = h * 0.85;
-
-        // Pillar granite gradient
-        const pGrad = ctx.createLinearGradient(px - pillarW / 2, 0, px + pillarW / 2, 0);
-        pGrad.addColorStop(0, '#292524');
-        pGrad.addColorStop(0.35, '#57534e');
-        pGrad.addColorStop(0.7, '#78716c');
-        pGrad.addColorStop(1, '#1c1917');
-        ctx.fillStyle = pGrad;
-        ctx.fillRect(px - pillarW / 2, pTop, pillarW, pBottom - pTop);
-
-        // Yali / Lion carved capitals on pillar head
-        ctx.fillStyle = '#d97706';
-        ctx.fillRect(px - pillarW * 0.8, pTop - 15, pillarW * 1.6, 20);
-
-        // Hanging brass Deepam lamp between pillars
-        if (p % 2 === 0) {
-          const lampX = px + (w / pillarCount) * 0.5;
-          const chainY = h * 0.35;
-          ctx.strokeStyle = '#d97706';
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(lampX, chainY);
-          ctx.lineTo(lampX, chainY + 80);
-          ctx.stroke();
-
-          // Brass lamp bell
-          ctx.fillStyle = '#f59e0b';
-          ctx.beginPath();
-          ctx.arc(lampX, chainY + 90, 14, 0, Math.PI);
-          ctx.fill();
-
-          // Luminous flame
-          const flameGrad = ctx.createRadialGradient(lampX, chainY + 86, 2, lampX, chainY + 86, 24);
-          flameGrad.addColorStop(0, '#ffffff');
-          flameGrad.addColorStop(0.3, '#fde047');
-          flameGrad.addColorStop(0.7, 'rgba(249, 115, 22, 0.6)');
-          flameGrad.addColorStop(1, 'rgba(249, 115, 22, 0)');
-          ctx.fillStyle = flameGrad;
-          ctx.beginPath();
-          ctx.arc(lampX, chainY + 86, 24, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // Silver Sanctum Entrance in the Distance at 0° (Center)
-      const sanctumX = w * 0.5;
-      const sanctumY = h * 0.6;
-      ctx.fillStyle = '#e2e8f0';
-      ctx.fillRect(sanctumX - 100, sanctumY - 140, 200, 140);
-      ctx.strokeStyle = '#d97706';
-      ctx.lineWidth = 8;
-      ctx.strokeRect(sanctumX - 100, sanctumY - 140, 200, 140);
-
-      // Sanctum Holy Light Aura
-      const sanctumGlow = ctx.createRadialGradient(sanctumX, sanctumY - 70, 10, sanctumX, sanctumY - 70, 120);
-      sanctumGlow.addColorStop(0, 'rgba(254, 240, 138, 0.9)');
-      sanctumGlow.addColorStop(0.5, 'rgba(245, 158, 11, 0.4)');
-      sanctumGlow.addColorStop(1, 'transparent');
-      ctx.fillStyle = sanctumGlow;
-      ctx.beginPath();
-      ctx.arc(sanctumX, sanctumY - 70, 120, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      // ----------------------------------------------------
-      // Viewpoint 3: Pavitra Teertham (Sacred Pond) & Margosa Tree
-      // ----------------------------------------------------
-      // Sacred Pond water reflecting temple spires
-      const pondY = h * 0.62;
-      const waterGrad = ctx.createLinearGradient(0, pondY, 0, h);
-      waterGrad.addColorStop(0, '#0c4a6e');
-      waterGrad.addColorStop(0.3, '#0369a1');
-      waterGrad.addColorStop(0.8, '#082f49');
-      ctx.fillStyle = waterGrad;
-      ctx.fillRect(0, pondY, w * 0.7, h - pondY);
-
-      // Lotus flowers in pond
-      for (let l = 0; l < 25; l++) {
-        const lx = (l * 137.5) % (w * 0.65);
-        const ly = pondY + 40 + (l * 29) % (h * 0.28);
-        ctx.fillStyle = '#f43f5e';
-        ctx.beginPath();
-        ctx.ellipse(lx, ly, 12, 6, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#15803d';
-        ctx.beginPath();
-        ctx.ellipse(lx + 8, ly + 2, 16, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Temple Teertham stone steps (Ghats)
-      for (let st = 0; st < 6; st++) {
-        const stepY = pondY + st * 15;
-        ctx.strokeStyle = '#78716c';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(0, stepY);
-        ctx.lineTo(w * 0.7, stepY);
-        ctx.stroke();
-      }
-
-      // Sthala Vriksham (Sacred Margosa / Neem Tree) at right flank (w * 0.8)
-      const treeX = w * 0.82;
-      const treeBaseY = h * 0.68;
-      // Trunk
-      ctx.fillStyle = '#451a03';
-      ctx.beginPath();
-      ctx.moveTo(treeX - 35, treeBaseY);
-      ctx.lineTo(treeX - 15, treeBaseY - 220);
-      ctx.lineTo(treeX + 15, treeBaseY - 220);
-      ctx.lineTo(treeX + 35, treeBaseY);
-      ctx.fill();
-
-      // Lush leafy canopy
-      ctx.fillStyle = '#166534';
-      for (let c = 0; c < 12; c++) {
-        const cx = treeX + (Math.sin(c) * 80);
-        const cy = treeBaseY - 240 + (Math.cos(c) * 60);
-        ctx.beginPath();
-        ctx.arc(cx, cy, 75, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Sacred Trishulam (Trident) beneath the tree with lemon garland
-      const triX = treeX - 70;
-      ctx.strokeStyle = '#dc2626';
-      ctx.lineWidth = 6;
-      ctx.beginPath();
-      ctx.moveTo(triX, treeBaseY);
-      ctx.lineTo(triX, treeBaseY - 110);
-      ctx.stroke();
-      // Three prongs
-      ctx.beginPath();
-      ctx.arc(triX, treeBaseY - 110, 22, Math.PI, 0, false);
-      ctx.stroke();
-      // Yellow lemon garland dots
-      ctx.fillStyle = '#fde047';
-      for (let lm = 0; lm < 8; lm++) {
-        ctx.beginPath();
-        ctx.arc(triX - 18 + lm * 5, treeBaseY - 95 + (lm % 2) * 4, 4, 0, Math.PI * 2);
+        ctx.arc(gopX - curW / 2 + (curW / 9) * (n + 1), curY + 22, 6, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    return canvas.toDataURL('image/jpeg', 0.92);
+    return canvas;
   }, []);
 
   // --------------------------------------------------------------------------
-  // Initialize Three.js WebGL Scene & Panorama Sphere
+  // Apply Texture to Three.js Mesh
+  // --------------------------------------------------------------------------
+  const applyCanvasToSphere = useCallback((canvas: HTMLCanvasElement) => {
+    if (!sphereMeshRef.current) return;
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+
+    const material = sphereMeshRef.current.material as THREE.MeshBasicMaterial;
+    material.color.setHex(0xffffff); // CRITICAL: 100% white for full vibrant brightness!
+    material.map = texture;
+    material.side = THREE.DoubleSide; // Visible from both sides
+    material.needsUpdate = true;
+
+    setIsLoadingTexture(false);
+  }, []);
+
+  // --------------------------------------------------------------------------
+  // Texture Loader Function
+  // --------------------------------------------------------------------------
+  const loadPanoramaTexture = useCallback(
+    (viewpoint: PanoramaViewpoint) => {
+      setIsLoadingTexture(true);
+
+      const imageUrl = customImageUrl || viewpoint.imageUrl;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+
+      img.onload = () => {
+        const canvas = createEquirectangularPanoramaFromImage(img, viewpoint);
+        applyCanvasToSphere(canvas);
+      };
+
+      img.onerror = () => {
+        console.warn('Image failed to load via CORS, applying procedural fallback:', imageUrl);
+        const fallbackCanvas = generateProceduralFallback(viewpoint.id);
+        applyCanvasToSphere(fallbackCanvas);
+      };
+
+      img.src = imageUrl;
+    },
+    [customImageUrl, createEquirectangularPanoramaFromImage, generateProceduralFallback, applyCanvasToSphere]
+  );
+
+  // --------------------------------------------------------------------------
+  // Initialize Three.js WebGL Scene
   // --------------------------------------------------------------------------
   useEffect(() => {
     if (!canvasMountRef.current) return;
@@ -498,11 +370,11 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // 2. Camera: Perspective inside the sphere (FOV: 75)
+    // 2. Camera
     const camera = new THREE.PerspectiveCamera(75, width / height, 1, 1100);
     cameraRef.current = camera;
 
-    // 3. Renderer with antialias and SRGB color space
+    // 3. Renderer (SRGB & antialias)
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       powerPreference: 'high-performance',
@@ -514,37 +386,33 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
     canvasMountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // 4. Inverted Sphere Geometry (radius 500)
-    // Scale on X inverted to map equirectangular image to inside of sphere
+    // 4. Inverted Sphere Geometry
     const geometry = new THREE.SphereGeometry(500, 60, 40);
     geometry.scale(-1, 1, 1);
 
-    // Initial Material
+    // Initial material with full white color
     const material = new THREE.MeshBasicMaterial({
-      color: 0x111111,
-      side: THREE.FrontSide, // FrontSide because geometry is inverted (-1 x)
+      color: 0xffffff,
+      side: THREE.DoubleSide,
     });
 
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
     sphereMeshRef.current = mesh;
 
-    // Texture loader
-    textureLoaderRef.current = new THREE.TextureLoader();
-
-    // 5. Load Panorama Texture
+    // 5. Load Initial Texture
     loadPanoramaTexture(selectedViewpoint);
 
-    // 6. Animation Loop with smooth inertia & damping
+    // 6. Animation Render Loop with damping & inertia
     const animate = () => {
       animationFrameId.current = requestAnimationFrame(animate);
 
-      // Auto rotation when idle and enabled
+      // Auto rotation
       if (autoRotate && !isUserInteracting.current) {
         targetLon.current += 0.08;
       }
 
-      // Smooth inertia / momentum damping
+      // Smooth inertia
       if (!isUserInteracting.current) {
         targetLon.current += velocityLon.current;
         targetLat.current += velocityLat.current;
@@ -552,14 +420,14 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
         velocityLat.current *= 0.92;
       }
 
-      // Clamp latitude between -85 and +85 degrees to prevent flipping
+      // Clamp latitude between -85 and +85 degrees
       targetLat.current = Math.max(-85, Math.min(85, targetLat.current));
 
-      // Damped interpolation towards target coordinates
+      // Damped interpolation
       lon.current += (targetLon.current - lon.current) * 0.12;
       lat.current += (targetLat.current - lat.current) * 0.12;
 
-      // Smooth FOV interpolation (zoom)
+      // Smooth FOV zoom interpolation
       if (cameraRef.current) {
         currentFov.current += (targetFov.current - currentFov.current) * 0.15;
         if (Math.abs(cameraRef.current.fov - currentFov.current) > 0.01) {
@@ -568,7 +436,7 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
         }
       }
 
-      // Convert spherical coordinates (lat, lon) to Cartesian lookAt target
+      // Convert spherical coordinates to Cartesian lookAt target
       const phi = THREE.MathUtils.degToRad(90 - lat.current);
       const theta = THREE.MathUtils.degToRad(lon.current);
 
@@ -578,7 +446,7 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
 
       camera.lookAt(targetX, targetY, targetZ);
 
-      // Update heading compass orientation (0° to 360°)
+      // Heading compass orientation
       const normHeading = Math.round(((lon.current % 360) + 360) % 360);
       setHeadingDegree(normHeading);
 
@@ -587,7 +455,7 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
 
     animate();
 
-    // 7. Handle Resize
+    // 7. Resize handling
     const handleResize = () => {
       if (!canvasMountRef.current || !rendererRef.current || !cameraRef.current) return;
       const newWidth = canvasMountRef.current.clientWidth;
@@ -609,46 +477,9 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
       material.dispose();
       renderer.dispose();
     };
-  }, []);
+  }, [loadPanoramaTexture, selectedViewpoint, autoRotate]);
 
-  // --------------------------------------------------------------------------
-  // Texture Loader Helper
-  // --------------------------------------------------------------------------
-  const loadPanoramaTexture = (viewpoint: PanoramaViewpoint) => {
-    setIsLoadingTexture(true);
-
-    const applyTexture = (texture: THREE.Texture) => {
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      if (sphereMeshRef.current) {
-        (sphereMeshRef.current.material as THREE.MeshBasicMaterial).map = texture;
-        (sphereMeshRef.current.material as THREE.MeshBasicMaterial).needsUpdate = true;
-      }
-      setIsLoadingTexture(false);
-    };
-
-    // If custom image or viewpoint URL provided, attempt loading with fallback
-    const targetUrl = customImageUrl || viewpoint.imageUrl;
-    if (targetUrl && textureLoaderRef.current) {
-      textureLoaderRef.current.load(
-        targetUrl,
-        (tex) => applyTexture(tex),
-        undefined,
-        () => {
-          // Fallback to high-res procedural generation on network failure
-          const fallbackData = generateProceduralTemplePanorama(viewpoint.id);
-          new THREE.TextureLoader().load(fallbackData, applyTexture);
-        }
-      );
-    } else {
-      // High-res procedural synthesis
-      const proceduralData = generateProceduralTemplePanorama(viewpoint.id);
-      new THREE.TextureLoader().load(proceduralData, applyTexture);
-    }
-  };
-
-  // Switch viewpoint
+  // Switch viewpoint handler
   const handleSelectViewpoint = (vp: PanoramaViewpoint) => {
     setSelectedViewpoint(vp);
     targetLon.current = vp.defaultLon;
@@ -658,14 +489,13 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
   };
 
   // --------------------------------------------------------------------------
-  // Touch & Mouse Drag Event Handlers with momentum & pinch-to-zoom
+  // Touch & Mouse Drag Handlers
   // --------------------------------------------------------------------------
   const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     isUserInteracting.current = true;
     setHasInteracted(true);
     setAutoRotate(false);
 
-    // Stop existing momentum
     velocityLon.current = 0;
     velocityLat.current = 0;
 
@@ -678,20 +508,17 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
     lastMoveY.current = event.clientY;
     lastPointerMoveTime.current = performance.now();
 
-    // Capture pointer to track outside bounds smoothly
     if (containerRef.current && (event.target as HTMLElement).setPointerCapture) {
       try {
         (event.target as HTMLElement).setPointerCapture(event.pointerId);
       } catch {
-        // Fallback gracefully
+        // Fallback
       }
     }
   };
 
   const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!isUserInteracting.current) return;
-
-    // Prevent page scrolling while user is interacting with the 360 viewer
     event.preventDefault();
 
     const now = performance.now();
@@ -700,12 +527,10 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
     const deltaX = event.clientX - onPointerDownPointerX.current;
     const deltaY = event.clientY - onPointerDownPointerY.current;
 
-    // Street view natural direction: dragging mouse left moves view right
     const sensitivity = 0.16 * (currentFov.current / 75);
     targetLon.current = onPointerDownLon.current - deltaX * sensitivity;
     targetLat.current = onPointerDownLat.current + deltaY * sensitivity;
 
-    // Calculate release velocity for natural momentum
     const instantVx = (event.clientX - lastMoveX.current) / dt;
     const instantVy = (event.clientY - lastMoveY.current) / dt;
     velocityLon.current = -instantVx * 1.5;
@@ -752,14 +577,12 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
 
   // Mouse wheel zoom
   const onWheel = (event: React.WheelEvent<HTMLDivElement>) => {
-    // Only zoom when mouse is over viewer, prevent page scrolling
     event.preventDefault();
     setHasInteracted(true);
     const zoomDelta = event.deltaY * 0.05;
     targetFov.current = Math.max(MIN_FOV, Math.min(MAX_FOV, targetFov.current + zoomDelta));
   };
 
-  // Reset view to default
   const handleResetView = () => {
     targetLon.current = selectedViewpoint.defaultLon;
     targetLat.current = selectedViewpoint.defaultLat;
@@ -768,7 +591,6 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
     velocityLat.current = 0;
   };
 
-  // Fullscreen toggle
   const handleToggleFullscreen = () => {
     if (!containerRef.current) return;
     if (!document.fullscreenElement) {
@@ -776,15 +598,6 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
     } else {
       document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
     }
-  };
-
-  // Zoom buttons
-  const handleZoomIn = () => {
-    targetFov.current = Math.max(MIN_FOV, targetFov.current - 12);
-  };
-
-  const handleZoomOut = () => {
-    targetFov.current = Math.min(MAX_FOV, targetFov.current + 12);
   };
 
   return (
@@ -795,7 +608,7 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
       }`}
       onWheel={onWheel}
     >
-      {/* 3D WebGL Canvas Mount Container */}
+      {/* MODE 1: 3D WebGL Canvas Mount Container */}
       <div
         ref={canvasMountRef}
         onPointerDown={onPointerDown}
@@ -804,16 +617,29 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
         onPointerCancel={onPointerUp}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
-        className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing touch-none z-0"
+        className={`absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing touch-none z-0 transition-opacity duration-300 ${
+          activeMode === '360' ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
         style={{ touchAction: 'none' }}
       />
 
-      {/* Atmospheric Vignette & Temple Dark Blue/Purple Lighting Gradient (doesn't block interaction) */}
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/60 pointer-events-none z-10" />
+      {/* MODE 2: High-Definition Direct Temple Photo View */}
+      {activeMode === 'photo' && (
+        <div className="absolute inset-0 z-0 bg-slate-950 overflow-hidden">
+          <img
+            src={customImageUrl || selectedViewpoint.imageUrl}
+            alt={selectedViewpoint.name}
+            className="w-full h-full object-cover object-center scale-105 transition-transform duration-1000"
+          />
+        </div>
+      )}
+
+      {/* Subtle Atmospheric Bottom Vignette (Leaves the temple image 100% bright and clear) */}
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-black/30 pointer-events-none z-10" />
 
       {/* Loading Overlay */}
-      {isLoadingTexture && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-xs z-30 pointer-events-none transition-opacity">
+      {isLoadingTexture && activeMode === '360' && (
+        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs z-30 pointer-events-none transition-opacity">
           <div className="flex flex-col items-center gap-3 text-amber-300">
             <div className="w-10 h-10 border-4 border-purple-500 border-t-amber-400 rounded-full animate-spin" />
             <span className="text-xs font-semibold tracking-wider font-cinzel">
@@ -823,38 +649,68 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
         </div>
       )}
 
-      {/* Top 360° HUD Badge */}
-      <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-        <div className="flex items-center gap-2 bg-slate-950/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-amber-500/40 text-amber-300 text-xs font-bold shadow-lg">
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span className="tracking-wide uppercase font-cinzel">Interactive 360° Darshan</span>
+      {/* Top 360° HUD Badge with Tamil & English Title */}
+      <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-amber-500/50 text-amber-300 text-xs font-bold shadow-xl">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="tracking-wide uppercase font-cinzel">
+            {activeMode === '360' ? '360° கோவில் தரிசனம்' : 'கோவில் காட்சி (Direct Photo)'}
+          </span>
+        </div>
+
+        {/* 360 / Photo View Switcher Pill */}
+        <div className="bg-slate-900/90 backdrop-blur-md p-1 rounded-full border border-slate-700 flex items-center gap-1 shadow">
+          <button
+            onClick={() => setActiveMode('360')}
+            className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              activeMode === '360'
+                ? 'bg-amber-500 text-slate-950 shadow font-bold'
+                : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>360° Drag View</span>
+          </button>
+          <button
+            onClick={() => setActiveMode('photo')}
+            className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              activeMode === 'photo'
+                ? 'bg-amber-500 text-slate-950 shadow font-bold'
+                : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>HD Photo View</span>
+          </button>
         </div>
 
         {/* Compass Heading Indicator */}
-        <div className="hidden sm:flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700 text-slate-300 text-xs font-mono shadow">
-          <Compass
-            className="w-3.5 h-3.5 text-amber-400 transition-transform duration-75"
-            style={{ transform: `rotate(${-headingDegree}deg)` }}
-          />
-          <span>{headingDegree}°</span>
-          <span className="text-[10px] text-amber-400 font-bold">
-            {headingDegree >= 315 || headingDegree < 45
-              ? 'N (Sanctum)'
-              : headingDegree >= 45 && headingDegree < 135
-              ? 'E (Gopuram)'
-              : headingDegree >= 135 && headingDegree < 225
-              ? 'S (Teertham)'
-              : 'W (Goshala)'}
-          </span>
-        </div>
+        {activeMode === '360' && (
+          <div className="hidden sm:flex items-center gap-1.5 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700 text-slate-300 text-xs font-mono shadow">
+            <Compass
+              className="w-3.5 h-3.5 text-amber-400 transition-transform duration-75"
+              style={{ transform: `rotate(${-headingDegree}deg)` }}
+            />
+            <span>{headingDegree}°</span>
+            <span className="text-[10px] text-amber-400 font-bold">
+              {headingDegree >= 315 || headingDegree < 45
+                ? 'N (Sanctum)'
+                : headingDegree >= 45 && headingDegree < 135
+                ? 'E (Gopuram)'
+                : headingDegree >= 135 && headingDegree < 225
+                ? 'S (Teertham)'
+                : 'W (Mandapam)'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Drag / Swipe Instruction Overlay (Hides automatically on first user interaction) */}
-      {!hasInteracted && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all duration-500 animate-fade-in">
-          <div className="flex items-center gap-2.5 bg-purple-950/85 backdrop-blur-md px-4 py-2 rounded-full border border-amber-400/60 text-white text-xs font-semibold shadow-2xl shadow-purple-950/80">
-            <Hand className="w-4 h-4 text-amber-300" />
-            <span>Click & Drag or Swipe to explore 360° surroundings</span>
+      {!hasInteracted && activeMode === '360' && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all duration-500 animate-fade-in">
+          <div className="flex items-center gap-2.5 bg-purple-950/90 backdrop-blur-md px-4 py-2 rounded-full border border-amber-400/70 text-white text-xs font-semibold shadow-2xl">
+            <Hand className="w-4 h-4 text-amber-300 animate-bounce" />
+            <span>கோவில் சுற்றுப்புறத்தை 360° பார்க்க சுழற்றுங்கள் (Click & Drag to explore)</span>
           </div>
         </div>
       )}
@@ -864,63 +720,71 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
         {/* Toggle details overlay (Focus Mode) */}
         <button
           onClick={() => setShowOverlayText(!showOverlayText)}
-          className="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 backdrop-blur-md shadow-md transition-all active:scale-95"
-          title={showOverlayText ? 'Hide text overlay (Focus on 360°)' : 'Show temple details'}
+          className="p-2.5 rounded-xl bg-slate-950/85 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 backdrop-blur-md shadow-md transition-all active:scale-95"
+          title={showOverlayText ? 'Hide text overlay (Focus on Temple)' : 'Show temple details'}
         >
           {showOverlayText ? <EyeOff className="w-4 h-4 text-amber-400" /> : <Eye className="w-4 h-4 text-amber-400" />}
         </button>
 
-        {/* Reset View */}
-        <button
-          onClick={handleResetView}
-          className="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 backdrop-blur-md shadow-md transition-all active:scale-95"
-          title="Reset to Center View"
-        >
-          <RotateCcw className="w-4 h-4 text-amber-400" />
-        </button>
+        {activeMode === '360' && (
+          <>
+            {/* Reset View */}
+            <button
+              onClick={handleResetView}
+              className="p-2.5 rounded-xl bg-slate-950/85 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 backdrop-blur-md shadow-md transition-all active:scale-95"
+              title="Reset to Center View"
+            >
+              <RotateCcw className="w-4 h-4 text-amber-400" />
+            </button>
 
-        {/* Zoom In */}
-        <button
-          onClick={handleZoomIn}
-          className="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 backdrop-blur-md shadow-md transition-all active:scale-95"
-          title="Zoom In"
-        >
-          <ZoomIn className="w-4 h-4 text-amber-400" />
-        </button>
+            {/* Zoom In */}
+            <button
+              onClick={() => {
+                targetFov.current = Math.max(MIN_FOV, targetFov.current - 12);
+              }}
+              className="p-2.5 rounded-xl bg-slate-950/85 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 backdrop-blur-md shadow-md transition-all active:scale-95"
+              title="Zoom In"
+            >
+              <ZoomIn className="w-4 h-4 text-amber-400" />
+            </button>
 
-        {/* Zoom Out */}
-        <button
-          onClick={handleZoomOut}
-          className="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 backdrop-blur-md shadow-md transition-all active:scale-95"
-          title="Zoom Out"
-        >
-          <ZoomOut className="w-4 h-4 text-amber-400" />
-        </button>
+            {/* Zoom Out */}
+            <button
+              onClick={() => {
+                targetFov.current = Math.min(MAX_FOV, targetFov.current + 12);
+              }}
+              className="p-2.5 rounded-xl bg-slate-950/85 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 backdrop-blur-md shadow-md transition-all active:scale-95"
+              title="Zoom Out"
+            >
+              <ZoomOut className="w-4 h-4 text-amber-400" />
+            </button>
 
-        {/* Auto Rotate Toggle */}
-        <button
-          onClick={() => setAutoRotate(!autoRotate)}
-          className={`p-2.5 rounded-xl border backdrop-blur-md shadow-md transition-all active:scale-95 ${
-            autoRotate
-              ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
-              : 'bg-slate-950/80 hover:bg-slate-900 text-slate-300 border-slate-800'
-          }`}
-          title={autoRotate ? 'Pause Auto-Rotation' : 'Auto-Rotate 360°'}
-        >
-          {autoRotate ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 text-amber-400" />}
-        </button>
+            {/* Auto Rotate Toggle */}
+            <button
+              onClick={() => setAutoRotate(!autoRotate)}
+              className={`p-2.5 rounded-xl border backdrop-blur-md shadow-md transition-all active:scale-95 ${
+                autoRotate
+                  ? 'bg-amber-500 text-slate-950 border-amber-400 font-bold'
+                  : 'bg-slate-950/85 hover:bg-slate-900 text-slate-300 border-slate-800'
+              }`}
+              title={autoRotate ? 'Pause Auto-Rotation' : 'Auto-Rotate 360°'}
+            >
+              {autoRotate ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 text-amber-400" />}
+            </button>
+          </>
+        )}
 
         {/* Fullscreen Toggle */}
         <button
           onClick={handleToggleFullscreen}
-          className="p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 backdrop-blur-md shadow-md transition-all active:scale-95"
+          className="p-2.5 rounded-xl bg-slate-950/85 hover:bg-slate-900 text-slate-300 hover:text-white border border-slate-800 backdrop-blur-md shadow-md transition-all active:scale-95"
           title={isFullscreen ? 'Exit Fullscreen' : 'Immersive Fullscreen'}
         >
           {isFullscreen ? <Minimize2 className="w-4 h-4 text-amber-400" /> : <Maximize2 className="w-4 h-4 text-amber-400" />}
         </button>
       </div>
 
-      {/* Center/Children Overlay Content (Temple Name, Slogan, CTA Buttons) */}
+      {/* Center Overlay Content (Temple Name, Slogan, CTA Buttons) */}
       {showOverlayText && (
         <div className="relative z-20 pointer-events-none flex flex-col justify-center items-center min-h-[580px] sm:min-h-[640px] px-4 sm:px-6 lg:px-8 py-20 text-center">
           <div className="pointer-events-auto max-w-4xl mx-auto space-y-6">
@@ -929,27 +793,37 @@ export const TemplePanoramaViewer: React.FC<TemplePanoramaViewerProps> = ({
         </div>
       )}
 
-      {/* Bottom Viewpoint Switcher Dock */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-full max-w-3xl px-4 pointer-events-auto">
-        <div className="bg-slate-950/85 backdrop-blur-md border border-purple-800/40 rounded-2xl p-2 shadow-2xl flex items-center justify-between gap-1.5 overflow-x-auto scrollbar-none">
+      {/* Bottom Viewpoint Switcher Dock with Real Temple Image Thumbnails */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 w-full max-w-4xl px-4 pointer-events-auto">
+        <div className="bg-slate-950/90 backdrop-blur-md border border-purple-800/50 rounded-2xl p-2.5 shadow-2xl flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
           {TEMPLE_VIEWPOINTS.map((vp) => {
             const isSelected = selectedViewpoint.id === vp.id;
             return (
               <button
                 key={vp.id}
                 onClick={() => handleSelectViewpoint(vp)}
-                className={`flex-1 min-w-[170px] sm:min-w-0 py-2 px-3 rounded-xl text-left transition-all ${
+                className={`flex-1 min-w-[200px] sm:min-w-0 p-2 rounded-xl text-left transition-all flex items-center gap-2.5 ${
                   isSelected
-                    ? 'bg-gradient-to-r from-purple-900 to-indigo-900 border border-amber-400/60 text-white shadow-md'
+                    ? 'bg-gradient-to-r from-purple-900/90 to-indigo-900/90 border-2 border-amber-400 text-white shadow-lg'
                     : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5'
                 }`}
               >
-                <div className="flex items-center gap-1.5 text-xs font-bold truncate">
-                  <MapPin className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected ? 'text-amber-400' : 'text-slate-400'}`} />
-                  <span className="truncate">{vp.name}</span>
-                </div>
-                <div className="text-[10px] text-slate-400 truncate pl-5">
-                  {vp.subtitle}
+                {/* Temple Thumbnail */}
+                <img
+                  src={vp.thumbUrl}
+                  alt={vp.name}
+                  className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-amber-400/40"
+                />
+                <div className="overflow-hidden">
+                  <div className="flex items-center gap-1 text-xs font-bold truncate">
+                    <span className="truncate">{vp.name}</span>
+                  </div>
+                  <div className="text-[11px] text-amber-300 font-medium truncate">
+                    {vp.nameTamil}
+                  </div>
+                  <div className="text-[10px] text-slate-400 truncate">
+                    {vp.subtitle}
+                  </div>
                 </div>
               </button>
             );
