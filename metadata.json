@@ -1,0 +1,6 @@
+{
+  "name": "Sri Amman Temple",
+  "description": "Official temple portal for Sri Amman Temple featuring daily pooja timings, online pooja booking, verified donations, festival calendar, photo gallery, and complete administrative management panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

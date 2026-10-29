@@ -1,0 +1,434 @@
+{
+  "templeInfo": {
+    "name": "Sri Amman Temple",
+    "subTitle": "Demo Project — Sri Maha Mariamman Devasthanam",
+    "tagline": "Sanctuary of Divine Grace, Healing & Eternal Prosperity",
+    "location": "No. 48, Sannadhi Street, Mylapore, Chennai, Tamil Nadu 600004",
+    "phone": "+91 44 2498 7654 / +91 98401 23456",
+    "email": "darshan@sriamman.org",
+    "whatsapp": "+919840123456",
+    "openingHours": {
+      "morning": "05:30 AM – 12:30 PM",
+      "evening": "04:30 PM – 09:00 PM"
+    },
+    "history": "Sri Amman Temple is an ancient sanctuary with a sacred heritage spanning over 300 years. According to local sthala puranam, a divine self-manifested (Swayambhu) trident was discovered at this consecrated site by revered temple elders. The presiding deity, Sri Maha Mariamman, is venerated as the cosmic Mother and Supreme Shakti who protects devotees, banishes ailments, blesses barren lands with monsoon rains, and grants peace and spiritual elevation. The temple follows traditional Saiva and Shakta Agamic rituals passed down through generations of devoted Sivachariyars.",
+    "traditions": "The temple observes strict Vedic Agamic traditions. Daily rituals begin before dawn with Suprabhatam and Gho Pooja (cow worship), followed by five daily Kaala Poojas with holy thirumanjanam (sacred baths) of milk, tender coconut water, sandalwood, and turmeric. Special Rahu Kalam Deeparadhana is observed on Tuesdays and Fridays, drawing thousands of devotees offering lemon lamps to Goddess Durga.",
+    "trustDetails": {
+      "trustName": "Sri Maha Mariamman Temple Charitable Trust",
+      "regNo": "TN/HRCE/ACT-1959/TR-4892",
+      "pan": "AAATS9876M",
+      "taxExemption": "80G Certified under IT Act 1961 - URN: AAATS9876MF20214",
+      "bankName": "State Bank of India, Mylapore Branch",
+      "accNo": "304892019482",
+      "ifsc": "SBIN0000876"
+    }
+  },
+  "poojaTimings": [
+    {
+      "id": "t1",
+      "name": "Ushakkala Pooja & Suprabhatam",
+      "time": "05:30 AM",
+      "description": "Temple doors open, Mangala Vadhyam, waking up of the divine Mother, Gho Pooja and Nirmalya Darshanam."
+    },
+    {
+      "id": "t2",
+      "name": "Kaalasanthi Pooja",
+      "time": "07:30 AM",
+      "description": "Sacred milk abhishekam, floral alangaram, Naivedhyam offering, and first Maha Deeparadhana."
+    },
+    {
+      "id": "t3",
+      "name": "Uchikkala Pooja (Midday)",
+      "time": "11:30 AM",
+      "description": "Midday grand abhishekam with panchamritam, Sahasranama Archana, and Rajagopuram bell ringing."
+    },
+    {
+      "id": "t4",
+      "name": "Afternoon Closure",
+      "time": "12:30 PM",
+      "description": "Temple sanctum sanctorum closes for afternoon rest until evening re-opening."
+    },
+    {
+      "id": "t5",
+      "name": "Sayaratchai Pooja (Evening)",
+      "time": "05:30 PM",
+      "description": "Temple reopens, lighting of one thousand oil lamps, Dhoop Deepam, and Veda Parayanam."
+    },
+    {
+      "id": "t6",
+      "name": "Arthajaama Pooja & Palliyarai Seve",
+      "time": "08:30 PM",
+      "description": "Night closing ritual, sacred lullaby (Oonjal Seve), offering of hot milk and dry fruits, sanctum closure at 09:00 PM."
+    }
+  ],
+  "poojas": [
+    {
+      "id": "pj-1",
+      "title": "Astothara Sathanama Archana",
+      "category": "Daily Archana",
+      "price": 101,
+      "duration": "15 mins",
+      "description": "Sacred recitation of 108 divine names of Sri Amman with fresh red hibiscus, vilvam, and kumkum offering for devotee and family.",
+      "benefits": "Removes planetary obstacles, grants mental tranquility, and protects against evil eye.",
+      "availableDays": "All Days",
+      "isActive": true
+    },
+    {
+      "id": "pj-2",
+      "title": "Special Thirumanjana Abhishekam",
+      "category": "Abhishekam",
+      "price": 501,
+      "duration": "45 mins",
+      "description": "Elaborate sacred bath with 11 holy Dravyas including fresh cow milk, tender coconut, curd, honey, panchamirtham, turmeric, and pure sandalwood paste.",
+      "benefits": "Brings auspiciousness, heals long-standing health issues, and purifies family lineage.",
+      "availableDays": "All Days (Morning 7:30 AM / 11:30 AM)",
+      "isActive": true
+    },
+    {
+      "id": "pj-3",
+      "title": "Rahu Kala Durga Lemon Lamp Pooja",
+      "category": "Special Pooja",
+      "price": 251,
+      "duration": "30 mins",
+      "description": "Special propitiation of Goddess Durga during Rahu Kalam with inverted lemon peel ghee lamps and red flower garlands.",
+      "benefits": "Neutralizes severe Rahu-Ketu doshas, resolves marriage and career delays, and brings fierce divine protection.",
+      "availableDays": "Tuesdays (3:00 PM - 4:30 PM) & Fridays (10:30 AM - 12:00 PM)",
+      "isActive": true
+    },
+    {
+      "id": "pj-4",
+      "title": "Maha Chandi Homam & Yagna",
+      "category": "Homam & Yagna",
+      "price": 2501,
+      "duration": "2.5 hours",
+      "description": "Supreme Vedic fire sacrifice invoking Devi Chandika with recitation of the Devi Mahatmyam (700 sacred mantras) and 108 medicinal herb offerings.",
+      "benefits": "Vanquishes legal adversaries, dispels negative energies, and bestows overwhelming prosperity and triumph.",
+      "availableDays": "Pournami, Amavasya & By Special Appointment",
+      "isActive": true
+    },
+    {
+      "id": "pj-5",
+      "title": "Navagraha Shanthi & Dosha Nivarana",
+      "category": "Astrological Pooja",
+      "price": 751,
+      "duration": "40 mins",
+      "description": "Comprehensive propitiation of all nine planetary deities with their respective grains (Navadhanyam), sacred colored vastrams, and specific samidha.",
+      "benefits": "Alleviates Sade Sati, Ashtama Sani, Kuja Dosha, and establishes celestial harmony.",
+      "availableDays": "Saturdays & Sundays",
+      "isActive": true
+    },
+    {
+      "id": "pj-6",
+      "title": "Golden Chariot (Thanga Ratham) Procession",
+      "category": "Grand Utsavam",
+      "price": 5001,
+      "duration": "1 hour",
+      "description": "Devotee family is privileged to pull the magnificent Golden Chariot carrying the Utsavamurthy of Sri Amman along the illuminated inner temple corridor.",
+      "benefits": "Royal honors, generation-spanning blessings, fulfilment of deep cherished vows.",
+      "availableDays": "Every Friday, Pournami & Festival Days",
+      "isActive": true
+    },
+    {
+      "id": "pj-7",
+      "title": "Sahasranama Lalitha Archana",
+      "category": "Daily Archana",
+      "price": 351,
+      "duration": "45 mins",
+      "description": "Chanting of the 1,000 supreme names of Sri Lalitha Tripura Sundari with kumkum archana performed directly in front of the sanctum.",
+      "benefits": "Invokes the unconditional maternal compassion of the Divine Mother, brings educational excellence and wisdom.",
+      "availableDays": "All Days (Evening 6:00 PM)",
+      "isActive": true
+    },
+    {
+      "id": "pj-8",
+      "title": "Nitya Annadhanam (100 Devotees Feeding)",
+      "category": "Seva",
+      "price": 3000,
+      "duration": "Midday Seva",
+      "description": "Sponsor hot, hygienic, traditional satvik meals (Sambar rice, Poriyal, Payasam, Vadai, Buttermilk) served on banana leaves to 100 pilgrims in your family name.",
+      "benefits": "The highest of all Vedic karmas; wipes out negative past deeds and feeds hungry pilgrims.",
+      "availableDays": "All Days",
+      "isActive": true
+    }
+  ],
+  "festivals": [
+    {
+      "id": "fest-1",
+      "title": "Aadi Thiruvizha & Poochorithal",
+      "startDate": "2026-07-24",
+      "endDate": "2026-08-04",
+      "badge": "Grand Annual Festival",
+      "description": "The sacred month of Aadi brings the temple's largest 10-day celebration. Features the majestic flag hoisting (Dwajarohanam), flower showering (Poochorithal), milk pot procession (Paal Kudam) with over 5,000 devotees, and sacred fire-walking (Thee Midhi).",
+      "image": "https://images.unsplash.com/photo-1609137144813-7d9921338f24?auto=format&fit=crop&w=1200&q=80",
+      "schedule": [
+        "Day 1: Dwajarohanam (Flag Hoisting)",
+        "Day 3: Paal Kudam (Milk Pot) Procession",
+        "Day 7: Poochorithal (Flower Offering)",
+        "Day 10: Thee Midhi Thiruvizha & Golden Chariot Ula"
+      ]
+    },
+    {
+      "id": "fest-2",
+      "title": "Navaratri & Vijayadasami Utsavam",
+      "startDate": "2026-10-11",
+      "endDate": "2026-10-20",
+      "badge": "9 Divine Nights",
+      "description": "Nine divine nights dedicated to Goddess Durga, Lakshmi, and Saraswati. The temple features a breathtaking 9-step traditional Golu display, daily classical Carnatic music concerts, and special Alankaram transforming Sri Amman each night.",
+      "image": "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80",
+      "schedule": [
+        "Nights 1-3: Sri Durga Alankaram",
+        "Nights 4-6: Sri Mahalakshmi Alankaram",
+        "Nights 7-9: Sri Saraswati & Mahishasura Mardini Alankaram",
+        "Day 10: Vijayadasami Parivettai & Vidyarambham"
+      ]
+    },
+    {
+      "id": "fest-3",
+      "title": "Panguni Uthiram Thirukkalyanam",
+      "startDate": "2027-03-22",
+      "endDate": "2027-03-24",
+      "badge": "Celestial Wedding",
+      "description": "Celebration of the celestial wedding of the Divine Mother. Devotees witness the divine Thirukkalyana Utsavam with traditional Mangalya Dharanam, silver palanquin procession, and mass Annadhanam.",
+      "image": "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
+      "schedule": [
+        "Day 1: Maapillai Azhaippu (Divine Procession)",
+        "Day 2: Maha Thirukkalyanam at Muhurtha Lagnam",
+        "Day 3: Shanti Abhishekam & Theerthavari"
+      ]
+    },
+    {
+      "id": "fest-4",
+      "title": "Maha Shivaratri & Ammavasai",
+      "startDate": "2027-02-15",
+      "endDate": "2027-02-16",
+      "badge": "All-Night Vigil",
+      "description": "The sacred night of Lord Shiva and Devi Shakti. All-night vigils with four Kaala Abhishekam conducted at midnight, continuous Rudra Japa, Bilva archana, and divine devotional discourses.",
+      "image": "https://images.unsplash.com/photo-1576487248805-cf45f6bcc67f?auto=format&fit=crop&w=1200&q=80",
+      "schedule": [
+        "09:00 PM: 1st Kaala Abhishekam (Milk & Curd)",
+        "12:00 AM: 2nd Kaala Abhishekam (Honey & Panchamirtham)",
+        "03:00 AM: 3rd Kaala Abhishekam (Fruits & Coconut)",
+        "05:00 AM: 4th Kaala Sandalwood Maha Deeparadhana"
+      ]
+    }
+  ],
+  "gallery": [
+    {
+      "id": "img-1",
+      "title": "The Majestic Dravidian Rajagopuram",
+      "category": "Architecture",
+      "url": "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=1200&q=80",
+      "description": "The 11-tiered illuminated Gopuram soaring 145 feet with intricate Agamic terracotta sculptures depicting temple leelas."
+    },
+    {
+      "id": "img-2",
+      "title": "Sanctum Brass Deepam & Oil Lamps",
+      "category": "Sanctum & Rituals",
+      "url": "https://images.unsplash.com/photo-1609137144813-7d9921338f24?auto=format&fit=crop&w=1200&q=80",
+      "description": "Auspicious brass lamps and glowing deeparadhana flame during the evening Sayaratchai offering."
+    },
+    {
+      "id": "img-3",
+      "title": "Aadi Poochorithal Floral Offering",
+      "category": "Festivals",
+      "url": "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80",
+      "description": "Tons of fresh jasmine, marigold, and lotus flowers offered to Sri Amman during the annual festival."
+    },
+    {
+      "id": "img-4",
+      "title": "Sacred Gho Pooja & Temple Cow Sanctuary",
+      "category": "Sanctum & Rituals",
+      "url": "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?auto=format&fit=crop&w=1200&q=80",
+      "description": "Devotees participating in morning Gho Pooja at the temple's revered Goshala."
+    },
+    {
+      "id": "img-5",
+      "title": "Devotees at Temple Prakaram & Sacred Pond",
+      "category": "Architecture",
+      "url": "https://images.unsplash.com/photo-1596178065887-1198b6148b2b?auto=format&fit=crop&w=1200&q=80",
+      "description": "The tranquil stone pillared corridors and sacred teertham pond where pilgrims take holy ablutions."
+    },
+    {
+      "id": "img-6",
+      "title": "Daily Annadhanam Hall (Free Food Seva)",
+      "category": "Annadhanam",
+      "url": "https://images.unsplash.com/photo-1505935428862-770b6f24f64c?auto=format&fit=crop&w=1200&q=80",
+      "description": "Pilgrims enjoying hot consecrated satvik prasadam meals served daily in the spacious trust dining hall."
+    }
+  ],
+  "announcements": [
+    {
+      "id": "ann-1",
+      "text": "Upcoming Chitra Pournami: Special 108 Milk Pot Abhishekam on 28th April. Online booking now open.",
+      "isImportant": true,
+      "date": "2026-10-20"
+    },
+    {
+      "id": "ann-2",
+      "text": "Devotees are requested to adhere to the traditional Vedic dress code (Dhoti/Kurta for men, Saree/Salwar for women).",
+      "isImportant": false,
+      "date": "2026-10-15"
+    },
+    {
+      "id": "ann-3",
+      "text": "Tax Exemption Benefit: All donations to Sri Amman Temple Trust are 100% tax deductible under Section 80G.",
+      "isImportant": false,
+      "date": "2026-10-10"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "bkg-1792733135587",
+      "bookingRef": "SAT-2026-6579",
+      "devoteeName": "Test Devotee",
+      "phone": "9876543210",
+      "email": "test@example.com",
+      "poojaId": "pj-1",
+      "poojaName": "Special Temple Pooja",
+      "amount": 0,
+      "date": "2026-10-30",
+      "timeSlot": "Morning 07:30 AM",
+      "gotram": "Siva Gotram",
+      "nakshatra": "",
+      "rasi": "",
+      "sankalpamNames": "Test Devotee",
+      "prasadDelivery": "temple",
+      "address": "",
+      "status": "Confirmed",
+      "notes": "",
+      "createdAt": "2026-10-23T05:25:35.587Z"
+    },
+    {
+      "id": "bkg-101",
+      "bookingRef": "SAT-2026-8941",
+      "devoteeName": "Kalyanasundaram Ramanathan",
+      "phone": "+91 98401 98765",
+      "email": "kalyan.raman@example.com",
+      "poojaId": "pj-2",
+      "poojaName": "Special Thirumanjana Abhishekam",
+      "amount": 501,
+      "date": "2026-10-25",
+      "timeSlot": "07:30 AM",
+      "gotram": "Kaundinya",
+      "nakshatra": "Rohini",
+      "rasi": "Rishabham",
+      "sankalpamNames": "Kalyanasundaram, Meenakshi (Wife), Arvind (Son)",
+      "prasadDelivery": "temple",
+      "address": "42, North Mada Street, Mylapore, Chennai",
+      "status": "Confirmed",
+      "notes": "Devotee family will arrive by 7:15 AM with fresh flower garland.",
+      "createdAt": "2026-10-22T14:30:00.000Z"
+    },
+    {
+      "id": "bkg-102",
+      "bookingRef": "SAT-2026-8942",
+      "devoteeName": "Sowmya Vijayakumar",
+      "phone": "+91 94440 12345",
+      "email": "sowmya.v@example.com",
+      "poojaId": "pj-3",
+      "poojaName": "Rahu Kala Durga Lemon Lamp Pooja",
+      "amount": 251,
+      "date": "2026-10-27",
+      "timeSlot": "03:00 PM",
+      "gotram": "Bharadwaja",
+      "nakshatra": "Uthirattathi",
+      "rasi": "Meenam",
+      "sankalpamNames": "Sowmya Vijayakumar, Vijayakumar (Husband)",
+      "prasadDelivery": "postal",
+      "address": "Flat 3B, Sri Sai Apartments, T. Nagar, Chennai 600017",
+      "status": "Pending",
+      "notes": "Request prasadam (Kumkum & Raksha sacred thread) to be delivered by speed post.",
+      "createdAt": "2026-10-22T18:15:00.000Z"
+    },
+    {
+      "id": "bkg-103",
+      "bookingRef": "SAT-2026-8943",
+      "devoteeName": "Narayanan Balasubramanian",
+      "phone": "+91 98842 55667",
+      "email": "n.bala@example.com",
+      "poojaId": "pj-6",
+      "poojaName": "Golden Chariot (Thanga Ratham) Procession",
+      "amount": 5001,
+      "date": "2026-10-30",
+      "timeSlot": "06:30 PM",
+      "gotram": "Haritha",
+      "nakshatra": "Hastham",
+      "rasi": "Kanni",
+      "sankalpamNames": "Narayanan, Lakshmi, Karthik, Divya",
+      "prasadDelivery": "temple",
+      "address": "15, Cenotaph Road, Teynampet, Chennai",
+      "status": "Confirmed",
+      "notes": "60th Birthday Sashtiabdhapoorthi thanksgiving chariot seva.",
+      "createdAt": "2026-10-22T20:00:00.000Z"
+    }
+  ],
+  "donations": [
+    {
+      "id": "don-1",
+      "receiptNo": "AMMAN-80G-2026-1001",
+      "donorName": "Dr. Subramanian Swaminathan",
+      "phone": "+91 98410 44556",
+      "email": "dr.subbu@example.com",
+      "category": "Annadhanam",
+      "amount": 5001,
+      "pan": "ABCPS1234D",
+      "address": "Apollo Hospitals Campus, Greams Road, Chennai",
+      "paymentMethod": "UPI / Net Banking",
+      "paymentRef": "UPI/20261022/98124501",
+      "status": "verified",
+      "taxExempt": true,
+      "createdAt": "2026-10-22T10:20:00.000Z"
+    },
+    {
+      "id": "don-2",
+      "receiptNo": "AMMAN-80G-2026-1002",
+      "donorName": "Gayathri Shankaran",
+      "phone": "+91 97910 88990",
+      "email": "gayathri.s@example.com",
+      "category": "Temple Renovation & Thiruppani",
+      "amount": 10001,
+      "pan": "BGXPS5678K",
+      "address": "22, Luz Church Road, Mylapore, Chennai",
+      "paymentMethod": "Debit Card / Credit Card",
+      "paymentRef": "TXN_78942109283",
+      "status": "verified",
+      "taxExempt": true,
+      "createdAt": "2026-10-22T15:45:00.000Z"
+    },
+    {
+      "id": "don-3",
+      "receiptNo": "AMMAN-80G-2026-1003",
+      "donorName": "Venkatesan Sundaram",
+      "phone": "+91 98408 11223",
+      "email": "venkat.sun@example.com",
+      "category": "Goshala (Cow Welfare)",
+      "amount": 2501,
+      "pan": "CKLPS9012F",
+      "address": "Flat 4A, Alwarpet, Chennai",
+      "paymentMethod": "UPI",
+      "paymentRef": "UPI/20261022/33441199",
+      "status": "verified",
+      "taxExempt": true,
+      "createdAt": "2026-10-22T19:10:00.000Z"
+    }
+  ],
+  "contactEnquiries": [
+    {
+      "id": "enq-1",
+      "name": "Ananya Krishnan",
+      "email": "ananya.k@example.com",
+      "phone": "+91 99620 44332",
+      "subject": "Wheelchair Accessibility and Special Darshan for Elders",
+      "message": "Namaskaram, we are visiting with my 82-year-old grandmother. Does the temple provide wheelchair assistance at the South Gopuram entrance?",
+      "status": "responded",
+      "createdAt": "2026-10-21T11:00:00.000Z"
+    }
+  ],
+  "admin": {
+    "email": "admin@sriamman.org",
+    "name": "Chief Temple Executive Officer",
+    "passwordHash": "Amman@2026",
+    "role": "Super Admin",
+    "lastLogin": "2026-10-23T05:25:41.031Z"
+  }
+}
